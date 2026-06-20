@@ -3,6 +3,9 @@
 A small personal web app to track how much liquid you drink each day, hit a daily
 goal (default **2 L / 2000 ml**), and earn rewards.
 
+**Live:** https://mimi0320mje.github.io/water-tracker/
+(Open on your iPhone → Share → **Add to Home Screen** to use it like an app.)
+
 ## Features
 
 - **Filling cup** — an empty glass fills up as you approach your daily goal.
