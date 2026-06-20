@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#4aa3df" />
+  <title>Sip — Water Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Sip" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ===== Side / top brand ===== -->
+    <header class="brand">
+      <span class="brand-logo">💧</span>
+      <span class="brand-name">Sip</span>
+    </header>
+
+    <main class="content">
+      <!-- ============ HOME ============ -->
+      <section class="screen is-active" id="screen-home">
+        <div class="home-grid">
+          <div class="cup-panel">
+            <div class="cup-wrap" id="cupWrap">
+              <svg class="cup-svg" viewBox="0 0 200 260" aria-hidden="true">
+                <defs>
+                  <clipPath id="cupClip">
+                    <path d="M40 20 L160 20 L146 240 Q145 252 133 252 L67 252 Q55 252 54 240 Z" />
+                  </clipPath>
+                </defs>
+                <!-- liquid (height set from JS) -->
+                <g clip-path="url(#cupClip)">
+                  <rect id="liquidRect" x="0" y="260" width="200" height="260" />
+                  <path id="liquidWave" d="" opacity="0.55" />
+                </g>
+                <!-- glass outline -->
+                <path class="cup-outline"
+                  d="M40 20 L160 20 L146 240 Q145 252 133 252 L67 252 Q55 252 54 240 Z" />
+                <line class="cup-shine" x1="58" y1="40" x2="52" y2="230" />
+              </svg>
+            </div>
+
+            <div class="cup-readout">
+              <div class="readout-main"><span id="todayMl">0</span> / <span id="goalMl">2000</span> ml</div>
+              <div class="readout-sub">
+                <span id="todayPct">0%</span> of today's goal · <span id="todayCal">0</span> kcal
+              </div>
+              <div class="goal-msg" id="goalMsg" hidden>🎉 Goal reached! +1 point</div>
+            </div>
+
+            <button class="btn btn-primary btn-add" id="openAddBtn">＋ Add drink</button>
+          </div>
+
+          <div class="today-panel">
+            <div class="points-badge">
+              <span class="points-num" id="pointsHome">0</span>
+              <span class="points-label">points</span>
+            </div>
+            <h2 class="panel-title">Today's drinks</h2>
+            <ul class="log-list" id="logList"></ul>
+            <p class="empty-hint" id="logEmpty">Nothing logged yet. Tap “Add drink” to start. 🥤</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DRINKS ============ -->
+      <section class="screen" id="screen-drinks">
+        <h2 class="panel-title">My drinks</h2>
+        <p class="muted">Calories are estimated per 100 ml. Edit anything — these are just to get you started.</p>
+        <ul class="drink-manage-list" id="drinkManageList"></ul>
+        <div class="card add-card">
+          <h3>Add a drink</h3>
+          <label>Name <input type="text" id="newDrinkName" placeholder="e.g. Green tea" /></label>
+          <label>Calories per 100 ml <input type="number" id="newDrinkCal" min="0" step="1" placeholder="0" /></label>
+          <button class="btn btn-primary" id="addDrinkBtn">Add drink</button>
+        </div>
+      </section>
+
+      <!-- ============ REWARDS ============ -->
+      <section class="screen" id="screen-rewards">
+        <div class="points-badge big">
+          <span class="points-num" id="pointsRewards">0</span>
+          <span class="points-label">points available</span>
+        </div>
+
+        <h2 class="panel-title">Wish list</h2>
+        <ul class="gift-list" id="giftList"></ul>
+        <p class="empty-hint" id="giftEmpty">No rewards yet. Add something to look forward to! 🎁</p>
+
+        <div class="card add-card">
+          <h3>Add a reward</h3>
+          <label>Reward <input type="text" id="newGiftName" placeholder="e.g. New mug" /></label>
+          <label>Point cost <input type="number" id="newGiftCost" min="1" step="1" placeholder="2" /></label>
+          <button class="btn btn-primary" id="addGiftBtn">Add reward</button>
+        </div>
+
+        <h2 class="panel-title">Claimed</h2>
+        <ul class="claim-list" id="claimList"></ul>
+        <p class="empty-hint" id="claimEmpty">Nothing claimed yet.</p>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="screen" id="screen-settings">
+        <h2 class="panel-title">Settings</h2>
+        <div class="card">
+          <label>Daily goal (ml)
+            <input type="number" id="goalInput" min="100" step="50" />
+          </label>
+          <label>Cup color
+            <input type="color" id="colorInput" />
+          </label>
+          <button class="btn btn-primary" id="saveSettingsBtn">Save</button>
+          <p class="saved-note" id="savedNote" hidden>Saved ✓</p>
+        </div>
+        <div class="card danger-card">
+          <h3>Reset</h3>
+          <p class="muted">Clears all data on this device (drinks, points, rewards, history).</p>
+          <button class="btn btn-ghost danger" id="resetBtn">Reset everything</button>
+        </div>
+        <p class="version-note">Sip · saved on this device only</p>
+      </section>
+    </main>
+
+    <!-- ===== Bottom / side nav ===== -->
+    <nav class="nav">
+      <button class="nav-btn is-active" data-target="screen-home"><span>🏠</span>Home</button>
+      <button class="nav-btn" data-target="screen-drinks"><span>🥤</span>Drinks</button>
+      <button class="nav-btn" data-target="screen-rewards"><span>🎁</span>Rewards</button>
+      <button class="nav-btn" data-target="screen-settings"><span>⚙️</span>Settings</button>
+    </nav>
+  </div>
+
+  <!-- ===== Add-drink dialog ===== -->
+  <div class="modal-overlay" id="addModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Add a drink">
+      <h3>Add a drink</h3>
+      <label>Drink
+        <select id="addDrinkSelect"></select>
+      </label>
+
+      <div id="customFields" hidden>
+        <label>Drink name <input type="text" id="customName" placeholder="e.g. Smoothie" /></label>
+        <label>Calories per 100 ml <input type="number" id="customCal" min="0" step="1" placeholder="0" /></label>
+        <label class="check-row">
+          <input type="checkbox" id="saveCustom" /> Save this drink for next time
+        </label>
+      </div>
+
+      <label>Amount (ml)
+        <input type="number" id="addMl" min="1" step="10" placeholder="250" />
+      </label>
+      <div class="quick-ml">
+        <button type="button" data-ml="200">200</button>
+        <button type="button" data-ml="250">250</button>
+        <button type="button" data-ml="330">330</button>
+        <button type="button" data-ml="500">500</button>
+      </div>
+
+      <p class="modal-error" id="addError" hidden></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelAddBtn">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddBtn">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
