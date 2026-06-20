@@ -449,8 +449,26 @@
 
   document.addEventListener("DOMContentLoaded", init);
 
-  // register service worker (best-effort; only over http/https)
+  // ---------- service worker: register + auto-update with no user action ----------
+  // The SW is network-first, so an online open always loads the latest files.
+  // On top of that, when a NEW service worker takes control we reload once so the
+  // page and its assets are guaranteed to match — no manual cache-clearing ever.
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    // Was a SW already controlling this page when it loaded? If so, a later
+    // controllerchange means a genuine UPDATE (reload). On a first-ever install
+    // there's no prior controller, so we must NOT reload (avoids a needless refresh).
+    const hadControllerAtLoad = !!navigator.serviceWorker.controller;
+    let reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloadedForUpdate || !hadControllerAtLoad) return;
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        reg.update();                          // check for a new version on each load
+        setInterval(() => reg.update(), 60 * 60 * 1000); // and hourly while open
+      }).catch(() => {});
+    });
   }
 })();

@@ -1,5 +1,5 @@
 /* Minimal offline cache for Sip */
-const CACHE = "sip-v2";
+const CACHE = "sip-v3";
 const ASSETS = [
   "./",
   "./index.html",
