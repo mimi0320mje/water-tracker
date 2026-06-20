@@ -169,6 +169,9 @@ body {
   background: var(--surface); width: 100%; max-width: 460px;
   border-radius: 20px 20px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
   box-shadow: var(--shadow);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal h3 { margin: 0 0 16px; }
 .modal label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
