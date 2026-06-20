@@ -16,7 +16,7 @@
   ];
 
   const DEFAULT_STATE = {
-    settings: { dailyGoalMl: 2000, cupColor: "#4aa3df" },
+    settings: { dailyGoalMl: 2000, cupColor: "#4aa3df", theme: "light" },
     drinks: DEFAULT_DRINKS.slice(),
     log: {},          // { "YYYY-MM-DD": [ {drinkId, name, ml, calories, time} ] }
     awardedDates: [], // days the goal was reached
@@ -52,6 +52,23 @@
   }
 
   let state = load();
+
+  // ---------- theme ----------
+  function applyTheme() {
+    const dark = state.settings.theme === "dark";
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    const sw = $("#themeSwitch");
+    if (sw) sw.setAttribute("aria-checked", dark ? "true" : "false");
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", dark ? "#16202e" : "#dceaf7");
+  }
+  function toggleTheme() {
+    state.settings.theme = state.settings.theme === "dark" ? "light" : "dark";
+    save();
+    applyTheme();
+  }
+  // apply immediately so there's no flash of the wrong theme
+  applyTheme();
 
   // ---------- derived ----------
   function todayEntries() {
@@ -379,6 +396,7 @@
     localStorage.removeItem(STORE_KEY);
     state = load();
     loadSettingsForm();
+    applyTheme();
     renderAll();
   }
 
@@ -422,8 +440,10 @@
 
     $("#saveSettingsBtn").addEventListener("click", saveSettings);
     $("#resetBtn").addEventListener("click", resetAll);
+    $("#themeSwitch").addEventListener("click", toggleTheme);
 
     loadSettingsForm();
+    applyTheme();
     renderAll();
   }
 

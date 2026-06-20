@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eef4fd"/>
+      <stop offset="48%" stop-color="#dfeaf9"/>
+      <stop offset="100%" stop-color="#bfd4ef"/>
+    </linearGradient>
+
+    <!-- large soft washes -->
+    <filter id="blobA" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0021" numOctaves="3" seed="11" result="t"/>
+      <feColorMatrix in="t" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -0.85" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      <feGaussianBlur stdDeviation="11"/>
+    </filter>
+
+    <!-- medium washes -->
+    <filter id="blobB" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0045" numOctaves="3" seed="29" result="t"/>
+      <feColorMatrix in="t" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.4 -1.05" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+
+    <!-- soft darker veins -->
+    <filter id="blobC" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0075" numOctaves="3" seed="5" result="t"/>
+      <feColorMatrix in="t" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.7 -1.45" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+
+    <!-- sparse fine splatter for character -->
+    <filter id="speck" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="42" result="t"/>
+      <feColorMatrix in="t" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 14 -8.2" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      <feGaussianBlur stdDeviation="0.4"/>
+    </filter>
+
+    <linearGradient id="footMask" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="55%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="foot"><rect width="1200" height="2000" fill="url(#footMask)"/></mask>
+  </defs>
+
+  <rect width="1200" height="2000" fill="url(#base)"/>
+  <rect width="1200" height="2000" fill="#8fb2e2" filter="url(#blobA)" opacity="0.5"/>
+  <rect width="1200" height="2000" fill="#5e8ad0" filter="url(#blobB)" opacity="0.42"/>
+  <rect width="1200" height="2000" fill="#3a66ac" filter="url(#blobC)" opacity="0.3"/>
+  <rect width="1200" height="2000" fill="#2b5396" filter="url(#blobB)" opacity="0.42" mask="url(#foot)"/>
+  <rect width="1200" height="2000" fill="#345f9f" filter="url(#speck)" opacity="0.32"/>
+  <rect width="1200" height="2000" fill="#ffffff" filter="url(#speck)" opacity="0.28"/>
+</svg>
