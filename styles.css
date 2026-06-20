@@ -165,6 +165,8 @@ body {
   position: fixed; inset: 0; background: rgba(36,59,74,0.45);
   display: flex; align-items: flex-end; justify-content: center; z-index: 50;
 }
+/* the [hidden] attribute must win over display:flex above, or the box never closes */
+.modal-overlay[hidden] { display: none; }
 .modal {
   background: var(--surface); width: 100%; max-width: 460px;
   border-radius: 20px 20px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
