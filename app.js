@@ -49,9 +49,78 @@
 
   function save() {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    schedulePush(); // mirror to the cloud when logged in (no-op for guests)
   }
 
   let state = load();
+
+  // ---------- account / cloud sync ----------
+  // `account` is runtime-only (derived from the live session), never stored in
+  // localStorage or pushed to the cloud — so we never show "logged in" stale.
+  let account = { mode: "guest" };
+
+  function cloud() { return window.SipCloud || null; }
+
+  // The slice of state we sync. Deliberately excludes `account`.
+  function currentPayload() {
+    return {
+      settings: state.settings,
+      drinks: state.drinks,
+      log: state.log,
+      awardedDates: state.awardedDates,
+      gifts: state.gifts,
+      claims: state.claims,
+    };
+  }
+
+  // Replace local state with a payload pulled from the cloud, surviving upgrades
+  // the same way load() does.
+  function adoptPayload(payload) {
+    state = Object.assign(structuredClone(DEFAULT_STATE), payload, {
+      settings: Object.assign({}, DEFAULT_STATE.settings, payload.settings),
+    });
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }
+
+  let pushTimer = null;
+  function schedulePush() {
+    const C = cloud();
+    if (!C || account.mode !== "user") return;
+    setSyncStatus("syncing");
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(async () => {
+      try { await C.push(currentPayload()); setSyncStatus("synced"); }
+      catch (_) { setSyncStatus("error"); }
+    }, 800);
+  }
+
+  async function onAuthChanged(user) {
+    if (user) {
+      account = { mode: "user", userId: user.$id, email: user.email };
+    } else {
+      account = { mode: "guest" };
+    }
+    renderLoginUI();
+    if (!user) return;
+
+    // Just signed in: decide between adopting cloud data or copying ours up.
+    const C = cloud();
+    setSyncStatus("syncing");
+    try {
+      const remote = await C.pull();
+      if (remote) {
+        adoptPayload(remote);            // returning user → cloud is the truth
+      } else {
+        await C.push(currentPayload());  // first login → copy this device up
+      }
+      setSyncStatus("synced");
+      loadSettingsForm();
+      applyTheme();
+      renderAll();
+    } catch (_) {
+      setSyncStatus("error");
+    }
+  }
 
   // ---------- theme ----------
   function applyTheme() {
@@ -71,15 +140,19 @@
   applyTheme();
 
   // ---------- derived ----------
-  function todayEntries() {
-    return state.log[todayKey()] || [];
+  // Per-date helpers so the calendar/history view can reuse the same math.
+  function entriesFor(key) {
+    return state.log[key] || [];
   }
-  function todayMl() {
-    return todayEntries().reduce((s, e) => s + e.ml, 0);
+  function mlFor(key) {
+    return entriesFor(key).reduce((s, e) => s + e.ml, 0);
   }
-  function todayCal() {
-    return Math.round(todayEntries().reduce((s, e) => s + e.calories, 0));
+  function calFor(key) {
+    return Math.round(entriesFor(key).reduce((s, e) => s + e.calories, 0));
   }
+  function todayEntries() { return entriesFor(todayKey()); }
+  function todayMl() { return mlFor(todayKey()); }
+  function todayCal() { return calFor(todayKey()); }
   function currentPoints() {
     const spent = state.claims.reduce((s, c) => s + c.cost, 0);
     return state.awardedDates.length - spent;
@@ -219,6 +292,77 @@
         </div>`;
       list.appendChild(li);
     });
+  }
+
+  // ---------- history calendar ----------
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+  let calYear, calMonth; // calMonth is 0-based
+  function initCalView() {
+    const d = new Date();
+    calYear = d.getFullYear();
+    calMonth = d.getMonth();
+  }
+  function changeMonth(delta) {
+    calMonth += delta;
+    if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+    if (calMonth > 11) { calMonth = 0; calYear += 1; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    if (calYear == null) initCalView();
+    $("#calMonthLabel").textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+    const grid = $("#calGrid");
+    grid.innerHTML = "";
+
+    const startDow = new Date(calYear, calMonth, 1).getDay(); // 0 = Sun
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const tKey = todayKey();
+
+    for (let i = 0; i < startDow; i++) {
+      const blank = document.createElement("div");
+      blank.className = "cal-cell cal-blank";
+      grid.appendChild(blank);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const ml = mlFor(key);
+      const reached = state.awardedDates.includes(key);
+      const cell = document.createElement("button");
+      cell.className = "cal-cell";
+      if (key === tKey) cell.classList.add("is-today");
+      if (ml > 0) cell.classList.add("has-data");
+      if (reached) cell.classList.add("reached");
+      cell.innerHTML =
+        `<span class="cal-day">${day}</span>` +
+        (ml > 0 ? `<span class="cal-ml">${ml >= 1000 ? (ml / 1000).toFixed(1) + "L" : ml + "ml"}</span>` : "") +
+        (reached ? `<span class="cal-dot" aria-hidden="true"></span>` : "");
+      cell.addEventListener("click", () => showDayDetail(key));
+      grid.appendChild(cell);
+    }
+  }
+
+  function showDayDetail(key) {
+    const entries = entriesFor(key);
+    $("#dayDetailDate").textContent = key === todayKey() ? `Today · ${key}` : key;
+    $("#dayDetailTotals").textContent =
+      `${mlFor(key).toLocaleString()} ml · ${calFor(key).toLocaleString()} kcal`;
+    const list = $("#dayDetailList");
+    list.innerHTML = "";
+    $("#dayDetailEmpty").hidden = entries.length > 0;
+    entries.forEach((e) => {
+      const li = document.createElement("li");
+      li.className = "log-item";
+      li.innerHTML = `
+        <div class="li-main">
+          <div class="li-name">${escapeHtml(e.name)}</div>
+          <div class="li-sub">${e.ml} ml · ${Math.round(e.calories)} kcal</div>
+        </div>`;
+      list.appendChild(li);
+    });
+    $("#dayDetail").hidden = false;
   }
 
   function renderAll(justReached) {
@@ -400,11 +544,94 @@
     renderAll();
   }
 
+  // ---------- login UI (Settings) ----------
+  function renderLoginUI() {
+    const C = cloud();
+    const ready = !!(C && C.isConfigured());
+    const isUser = account.mode === "user";
+    $("#cloudUnavailable").hidden = ready;
+    $("#guestView").hidden = !ready || isUser;
+    $("#userView").hidden = !isUser;
+    if (isUser) $("#accountEmail").textContent = account.email || "";
+  }
+
+  function setSyncStatus(s) {
+    const el = $("#syncStatus");
+    if (!el) return;
+    el.textContent =
+      s === "syncing" ? "Syncing…" :
+      s === "synced"  ? "Synced ✓" :
+      s === "error"   ? "Sync issue — will retry when you're back online" : "";
+    el.dataset.state = s || "";
+  }
+
+  let authMode = "login"; // "login" | "signup"
+  function openAuth(mode) {
+    authMode = mode;
+    $("#authError").hidden = true;
+    $("#authEmail").value = "";
+    $("#authPassword").value = "";
+    $("#authTitle").textContent = mode === "signup" ? "Create your account" : "Log in";
+    $("#authSubmitBtn").textContent = mode === "signup" ? "Create account" : "Log in";
+    $("#authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+    $("#authSwitch").innerHTML = mode === "signup"
+      ? 'Already have an account? <button type="button" class="linklike">Log in</button>'
+      : 'New to Sip? <button type="button" class="linklike">Sign up</button>';
+    $("#authSwitch").querySelector("button")
+      .addEventListener("click", () => openAuth(mode === "signup" ? "login" : "signup"));
+    $("#authModal").hidden = false;
+    $("#authEmail").focus();
+  }
+  function closeAuth() { $("#authModal").hidden = true; }
+
+  function friendlyAuthError(e) {
+    const t = e && e.type;
+    if (t === "user_already_exists") return "An account with that email already exists. Try logging in.";
+    if (t === "user_invalid_credentials") return "Email or password doesn't match. Please try again.";
+    if (t === "general_argument_invalid") return "Please enter a valid email and a password of at least 8 characters.";
+    if (e && e.message && /network|fetch|failed/i.test(e.message)) return "Couldn't reach the server. Check your connection and try again.";
+    return (e && e.message) || "Something went wrong. Please try again.";
+  }
+
+  async function submitAuth() {
+    const C = cloud();
+    if (!C) return;
+    const email = $("#authEmail").value.trim();
+    const pw = $("#authPassword").value;
+    const err = $("#authError");
+    if (!email || !pw) { err.textContent = "Please enter your email and password."; err.hidden = false; return; }
+    if (authMode === "signup" && pw.length < 8) {
+      err.textContent = "Password must be at least 8 characters."; err.hidden = false; return;
+    }
+    const btn = $("#authSubmitBtn");
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = "Please wait…";
+    try {
+      if (authMode === "signup") await C.signUp(email, pw);
+      else await C.logIn(email, pw);
+      closeAuth(); // onAuthChanged (fired by cloud.js) finishes the sync
+    } catch (e) {
+      err.textContent = friendlyAuthError(e); err.hidden = false;
+    } finally {
+      btn.disabled = false; btn.textContent = label;
+    }
+  }
+
+  async function logOut() {
+    const C = cloud();
+    if (C) await C.logOut(); // onAuthChanged reverts us to guest
+  }
+
   // ---------- navigation ----------
   function showScreen(id) {
     document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("is-active", s.id === id));
     document.querySelectorAll(".nav-btn").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.target === id));
+    if (id === "screen-history") {
+      initCalView();
+      renderCalendar();
+      showDayDetail(todayKey()); // open on today by default
+    }
   }
 
   // ---------- wire up ----------
@@ -437,6 +664,23 @@
       $("#newGiftName").value = "";
       $("#newGiftCost").value = "";
     });
+
+    $("#calPrev").addEventListener("click", () => changeMonth(-1));
+    $("#calNext").addEventListener("click", () => changeMonth(1));
+
+    // account / login
+    $("#openLoginBtn").addEventListener("click", () => openAuth("login"));
+    $("#openSignupBtn").addEventListener("click", () => openAuth("signup"));
+    $("#authCancelBtn").addEventListener("click", closeAuth);
+    $("#authSubmitBtn").addEventListener("click", submitAuth);
+    $("#authModal").addEventListener("click", (e) => { if (e.target.id === "authModal") closeAuth(); });
+    $("#logoutBtn").addEventListener("click", logOut);
+    window.addEventListener("sip-auth-changed", (e) => onAuthChanged(e.detail.user));
+    // reflect whatever cloud.js already knows (it may resolve before/after init)
+    if (cloud()) { account = cloud().getUser()
+      ? { mode: "user", userId: cloud().getUser().$id, email: cloud().getUser().email }
+      : { mode: "guest" }; }
+    renderLoginUI();
 
     $("#saveSettingsBtn").addEventListener("click", saveSettings);
     $("#resetBtn").addEventListener("click", resetAll);

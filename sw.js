@@ -1,10 +1,11 @@
 /* Minimal offline cache for Sip */
-const CACHE = "sip-v3";
+const CACHE = "sip-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./cloud.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -27,6 +28,9 @@ self.addEventListener("activate", (e) => {
 // cached copy only when offline. This makes code updates show up right away.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Only handle our own files. Cross-origin calls (e.g. the Appwrite sync API)
+  // must pass straight through untouched so sync always hits the live server.
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {

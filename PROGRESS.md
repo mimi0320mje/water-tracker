@@ -1,10 +1,26 @@
 # Sip — Progress & Next Steps
 
-_Last updated: 2026-06-20_
+_Last updated: 2026-06-22_
 
 ## Status
 Live and working. Deployed to GitHub Pages: https://mimi0320mje.github.io/water-tracker/
 Verified on desktop (browser preview) and on the iPhone 17 simulator.
+
+## This session (2026-06-22) — History + cross-device sync
+- **History calendar** (new **History** tab): monthly grid over the existing per-day `log`,
+  marks days with intake and goal-reached days, tap a day to see its drinks + ml + kcal.
+  Works for everyone (guest or logged-in). Verified in light + dark, month nav, day detail.
+- **Accounts / cross-device sync** (Settings → Account): default **guest** (device-only,
+  unchanged) with **Sign up / Log in**. When logged in, data syncs via **Appwrite** (free
+  tier). First login **copies** existing guest data up; returning device adopts the cloud copy.
+  - Sync code is isolated in **`cloud.js`** (`window.SipCloud`); `app.js` just calls it.
+  - `sw.js` bumped to `sip-v4`; cross-origin (Appwrite) requests bypass the cache.
+  - **LIVE + verified** against the real Appwrite project (endpoint `fra.cloud.appwrite.io`,
+    project `6a396f2a002d8d6bb834`, db `6a39703b0030c8e040d6`, table `userdata`). Verified in
+    the browser: sign up, guest-data copy-up, log out + wiped device + log back in restores
+    from cloud, ongoing edits auto-sync. See `SETUP-appwrite.md` for how the backend is set up.
+  - Web SDK note: pinned `appwrite@18` (jsdelivr ESM) uses **positional** args, not the
+    object style in some docs. The CONFIG values are public client values (safe to commit).
 
 ## Done
 - Core: filling SVG cup toward a daily **2 L** goal; log drinks by **ml**; calories
@@ -46,6 +62,6 @@ Open UX items to decide/refine with the user:
 - Replace the seeded default drinks with the user's **real common-drinks list** (with
   calories; user will provide). Defaults currently: Water, Sparkling water, Coffee, Tea,
   Milk, Orange juice, Soda.
-- Optional cross-device **sync** (needs a private-friendly host or cloud) — currently
-  device-only.
+- Cross-device **sync** — built this session via Appwrite; needs the one-time
+  `SETUP-appwrite.md` step to go live. (No longer device-only once configured.)
 - Optional **partial hydration weighting** (e.g. coffee/alcohol counting less than water).
