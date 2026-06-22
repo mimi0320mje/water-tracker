@@ -13,12 +13,11 @@ import {
 } from "https://cdn.jsdelivr.net/npm/appwrite@18/+esm";
 
 const CONFIG = {
-  // ↓↓↓ FILL THESE IN after creating your free Appwrite project ↓↓↓
-  endpoint: "https://nyc.cloud.appwrite.io/v1", // your project's API endpoint
-  projectId: "PASTE_PROJECT_ID",                // your project ID
-  // These two are created by the setup step; leave as-is unless you renamed them.
-  databaseId: "sip",
-  collectionId: "userData",
+  endpoint: "https://fra.cloud.appwrite.io/v1", // your project's API endpoint
+  projectId: "6a396f2a002d8d6bb834",            // your project ID
+  // IDs of the database + table created in the Appwrite console.
+  databaseId: "6a39703b0030c8e040d6",
+  collectionId: "userdata", // the userData table's ID
 };
 
 const configured = !CONFIG.projectId.startsWith("PASTE_");
@@ -50,17 +49,17 @@ const SipCloud = {
   },
 
   async signUp(email, password) {
-    await account.create({ userId: ID.unique(), email, password });
+    await account.create(ID.unique(), email, password);
     return SipCloud.logIn(email, password); // log straight in after sign-up
   },
 
   async logIn(email, password) {
-    await account.createEmailPasswordSession({ email, password });
+    await account.createEmailPasswordSession(email, password);
     return SipCloud.refreshUser();
   },
 
   async logOut() {
-    try { await account.deleteSession({ sessionId: "current" }); } catch (_) {}
+    try { await account.deleteSession("current"); } catch (_) {}
     currentUser = null;
     emitAuthChanged();
   },
@@ -70,11 +69,9 @@ const SipCloud = {
   async pull() {
     if (!currentUser) return null;
     try {
-      const doc = await databases.getDocument({
-        databaseId: CONFIG.databaseId,
-        collectionId: CONFIG.collectionId,
-        documentId: currentUser.$id,
-      });
+      const doc = await databases.getDocument(
+        CONFIG.databaseId, CONFIG.collectionId, currentUser.$id,
+      );
       return doc.payload ? JSON.parse(doc.payload) : null;
     } catch (e) {
       if (e && e.code === 404) return null; // no document yet
@@ -86,17 +83,17 @@ const SipCloud = {
   async push(payload) {
     if (!currentUser) return;
     const uid = currentUser.$id;
-    await databases.upsertDocument({
-      databaseId: CONFIG.databaseId,
-      collectionId: CONFIG.collectionId,
-      documentId: uid,
-      data: { payload: JSON.stringify(payload), updatedAt: Date.now() },
-      permissions: [
+    await databases.upsertDocument(
+      CONFIG.databaseId,
+      CONFIG.collectionId,
+      uid,
+      { payload: JSON.stringify(payload), updatedAt: Date.now() },
+      [
         Permission.read(Role.user(uid)),
         Permission.update(Role.user(uid)),
         Permission.delete(Role.user(uid)),
       ],
-    });
+    );
   },
 };
 
