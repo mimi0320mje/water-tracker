@@ -1,7 +1,16 @@
 # Sip — Cross-device sync setup (Appwrite)
 
+> ✅ **Already configured (2026-06-22).** This project is live and synced. The values are
+> filled into `cloud.js` (`CONFIG`): endpoint `https://fra.cloud.appwrite.io/v1`, project
+> `6a396f2a002d8d6bb834`, database `6a39703b0030c8e040d6`, table `userdata`. This guide is
+> kept as a reference in case you ever need to rebuild the backend.
+
 This is a **one-time** setup to turn on the optional "log in & sync across devices"
 feature. It uses **Appwrite Cloud's free tier** — no cost. You only do this once.
+
+> **Note on naming:** newer Appwrite calls the pieces **Tables / Columns / Rows** (older
+> docs say **Collections / Attributes / Documents**). They're the same thing — the steps
+> below use the Tables wording.
 
 Everything here is done in the Appwrite Console (a website) — no commands, no passwords
 shared with anyone. At the end you'll copy **two public values** into `cloud.js`.
@@ -31,30 +40,31 @@ shared with anyone. At the end you'll copy **two public values** into `cloud.js`
 2. Open the **Settings** tab of Auth and make sure **Email/Password** is **enabled**
    (it usually is by default).
 
-## 5. Create the database + collection
-1. Left sidebar → **Databases** → **Create database**.
-   - Name: `sip` — and set the **Database ID** to exactly **`sip`**.
-2. Inside it, **Create collection**.
-   - Name: `userData` — set the **Collection ID** to exactly **`userData`**.
+## 5. Create the database + table
+1. Left sidebar → **Databases** → **Create database**. Name it `sip`.
+   - Appwrite assigns it an **ID** automatically (e.g. `6a39703b0030c8e040d6`). Copy that ID
+     into `cloud.js` → `CONFIG.databaseId`.
+2. Inside it, **Create table**. Name it `userData`.
+   - Copy its **ID** (e.g. `userdata`) into `cloud.js` → `CONFIG.collectionId`.
 
-## 6. Add the two attributes (the shape of each saved record)
-In the `userData` collection → **Attributes** tab → **Create attribute**:
-1. **String** attribute
+## 6. Add the two columns (the shape of each saved record)
+In the `userData` table → **Columns** tab → **Create column**:
+1. **String** column
    - Key: `payload`
    - Size: `1000000`
    - Required: **off**
-2. **Integer** attribute
+2. **Integer** column
    - Key: `updatedAt`
    - Required: **off**
 
 ## 7. Lock it down so each person only sees their own data
-1. In the `userData` collection → **Settings** tab.
-2. Turn **Document Security** **ON**.
-3. Under **Permissions**, add **one** row:
-   - Role: **Users** (all signed-in users)
-   - Check **Create** only. (Leave Read/Update/Delete unchecked here.)
+1. In the `userData` table → **Settings** tab.
+2. Under **Permissions**, add **one** role:
+   - Role: **All users** (all signed-in users)
+   - Check **Create** only. (Leave Read/Update/Delete unchecked.) Click **Update**.
    - Why: this lets a logged-in person create *their own* record. Reading and editing are
      restricted per-record to the owner automatically (the app sets that when it saves).
+3. Turn **Row Security** **ON** and click **Update**.
 
 ---
 

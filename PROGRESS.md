@@ -15,9 +15,12 @@ Verified on desktop (browser preview) and on the iPhone 17 simulator.
   tier). First login **copies** existing guest data up; returning device adopts the cloud copy.
   - Sync code is isolated in **`cloud.js`** (`window.SipCloud`); `app.js` just calls it.
   - `sw.js` bumped to `sip-v4`; cross-origin (Appwrite) requests bypass the cache.
-  - **Setup still required to go live:** follow `SETUP-appwrite.md`, then paste the project
-    endpoint + ID into `cloud.js` (`CONFIG`). Until then the app shows "sync isn't set up
-    yet" and stays guest-only — no errors. UI fully built + verified in the unconfigured state.
+  - **LIVE + verified** against the real Appwrite project (endpoint `fra.cloud.appwrite.io`,
+    project `6a396f2a002d8d6bb834`, db `6a39703b0030c8e040d6`, table `userdata`). Verified in
+    the browser: sign up, guest-data copy-up, log out + wiped device + log back in restores
+    from cloud, ongoing edits auto-sync. See `SETUP-appwrite.md` for how the backend is set up.
+  - Web SDK note: pinned `appwrite@18` (jsdelivr ESM) uses **positional** args, not the
+    object style in some docs. The CONFIG values are public client values (safe to commit).
 
 ## Done
 - Core: filling SVG cup toward a daily **2 L** goal; log drinks by **ml**; calories
