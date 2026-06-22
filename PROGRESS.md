@@ -1,10 +1,23 @@
 # Sip — Progress & Next Steps
 
-_Last updated: 2026-06-20_
+_Last updated: 2026-06-22_
 
 ## Status
 Live and working. Deployed to GitHub Pages: https://mimi0320mje.github.io/water-tracker/
 Verified on desktop (browser preview) and on the iPhone 17 simulator.
+
+## This session (2026-06-22) — History + cross-device sync
+- **History calendar** (new **History** tab): monthly grid over the existing per-day `log`,
+  marks days with intake and goal-reached days, tap a day to see its drinks + ml + kcal.
+  Works for everyone (guest or logged-in). Verified in light + dark, month nav, day detail.
+- **Accounts / cross-device sync** (Settings → Account): default **guest** (device-only,
+  unchanged) with **Sign up / Log in**. When logged in, data syncs via **Appwrite** (free
+  tier). First login **copies** existing guest data up; returning device adopts the cloud copy.
+  - Sync code is isolated in **`cloud.js`** (`window.SipCloud`); `app.js` just calls it.
+  - `sw.js` bumped to `sip-v4`; cross-origin (Appwrite) requests bypass the cache.
+  - **Setup still required to go live:** follow `SETUP-appwrite.md`, then paste the project
+    endpoint + ID into `cloud.js` (`CONFIG`). Until then the app shows "sync isn't set up
+    yet" and stays guest-only — no errors. UI fully built + verified in the unconfigured state.
 
 ## Done
 - Core: filling SVG cup toward a daily **2 L** goal; log drinks by **ml**; calories
@@ -46,6 +59,6 @@ Open UX items to decide/refine with the user:
 - Replace the seeded default drinks with the user's **real common-drinks list** (with
   calories; user will provide). Defaults currently: Water, Sparkling water, Coffee, Tea,
   Milk, Orange juice, Soda.
-- Optional cross-device **sync** (needs a private-friendly host or cloud) — currently
-  device-only.
+- Cross-device **sync** — built this session via Appwrite; needs the one-time
+  `SETUP-appwrite.md` step to go live. (No longer device-only once configured.)
 - Optional **partial hydration weighting** (e.g. coffee/alcohol counting less than water).

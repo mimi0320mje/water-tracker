@@ -105,9 +105,48 @@
         <p class="empty-hint" id="claimEmpty">Nothing claimed yet.</p>
       </section>
 
+      <!-- ============ HISTORY ============ -->
+      <section class="screen" id="screen-history">
+        <h2 class="panel-title">History</h2>
+        <div class="card cal-card">
+          <div class="cal-head">
+            <button class="icon-btn cal-nav" id="calPrev" title="Previous month" aria-label="Previous month">‹</button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+            <button class="icon-btn cal-nav" id="calNext" title="Next month" aria-label="Next month">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <p class="cal-legend"><span class="cal-dot"></span> goal reached</p>
+        </div>
+        <div class="card day-detail" id="dayDetail" hidden>
+          <h3 id="dayDetailDate"></h3>
+          <p class="muted" id="dayDetailTotals"></p>
+          <ul class="log-list" id="dayDetailList"></ul>
+          <p class="empty-hint" id="dayDetailEmpty">No drinks logged this day. 🌙</p>
+        </div>
+      </section>
+
       <!-- ============ SETTINGS ============ -->
       <section class="screen" id="screen-settings">
         <h2 class="panel-title">Settings</h2>
+        <div class="card" id="accountCard">
+          <span class="field-label">Account</span>
+          <div id="guestView">
+            <p class="muted account-line">You're using Sip as a <strong>guest</strong> — your data is saved on this device only. Sign up to sync it across your phones.</p>
+            <div class="modal-actions">
+              <button class="btn btn-ghost" id="openLoginBtn">Log in</button>
+              <button class="btn btn-primary" id="openSignupBtn">Sign up</button>
+            </div>
+          </div>
+          <div id="userView" hidden>
+            <p class="muted account-line">Signed in as <strong id="accountEmail"></strong> — your data syncs across devices.</p>
+            <p class="sync-status" id="syncStatus"></p>
+            <button class="btn btn-ghost" id="logoutBtn">Log out</button>
+          </div>
+          <p class="muted account-line" id="cloudUnavailable" hidden>Cross-device sync isn't set up yet — Sip still works as a guest on this device.</p>
+        </div>
         <div class="card">
           <span class="field-label">Appearance</span>
           <div class="theme-toggle">
@@ -158,6 +197,10 @@
           <path d="M12 7.5C12 5.5 10.8 4 9.2 4 7.9 4 7 5 7 6c0 1 1 1.5 2.3 1.5Z"/>
           <path d="M12 7.5C12 5.5 13.2 4 14.8 4 16.1 4 17 5 17 6c0 1-1 1.5-2.3 1.5Z"/>
         </svg>Rewards</button>
+      <button class="nav-btn" data-target="screen-history">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9.5h16"/><path d="M8 3v4M16 3v4"/>
+        </svg>History</button>
       <button class="nav-btn" data-target="screen-settings">
         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="3.2"/>
@@ -200,6 +243,26 @@
     </div>
   </div>
 
+  <!-- ===== Account dialog (sign up / log in) ===== -->
+  <div class="modal-overlay" id="authModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Account">
+      <h3 id="authTitle">Log in</h3>
+      <label>Email
+        <input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com" />
+      </label>
+      <label>Password
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="At least 8 characters" />
+      </label>
+      <p class="modal-error" id="authError" hidden></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="authCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="authSubmitBtn">Log in</button>
+      </div>
+      <p class="auth-switch" id="authSwitch"></p>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script type="module" src="cloud.js"></script>
 </body>
 </html>

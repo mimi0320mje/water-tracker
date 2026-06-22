@@ -245,6 +245,53 @@ body::after {
 .modal-actions { display: flex; gap: 10px; }
 .modal-actions .btn { flex: 1; }
 
+/* ===== History calendar ===== */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-month-label { font-weight: 700; font-size: 1.05rem; }
+.cal-nav { font-size: 1.4rem; line-height: 1; color: var(--ink); }
+.cal-nav:hover { background: var(--line); color: var(--accent); }
+
+.cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-weekdays { margin-bottom: 6px; }
+.cal-weekdays span { text-align: center; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+
+.cal-cell {
+  position: relative; aspect-ratio: 1 / 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--input-bg); color: var(--ink);
+  font-family: var(--font); cursor: pointer; padding: 2px;
+  transition: transform 0.08s, border-color 0.2s;
+}
+.cal-cell:active { transform: scale(0.96); }
+.cal-blank { border: none; background: transparent; cursor: default; }
+.cal-day { font-size: 0.85rem; font-weight: 600; }
+.cal-ml { font-size: 0.6rem; color: var(--muted); line-height: 1; }
+.cal-cell.has-data { border-color: var(--accent); }
+.cal-cell.is-today { box-shadow: 0 0 0 2px var(--accent); }
+.cal-cell.reached { background: linear-gradient(135deg, rgba(74,163,223,0.22), rgba(59,178,115,0.22)); }
+.cal-dot {
+  position: absolute; top: 5px; right: 5px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--good);
+}
+.cal-legend { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.78rem; margin: 12px 0 0; }
+.cal-legend .cal-dot { position: static; }
+
+.day-detail h3 { margin-bottom: 4px; }
+
+/* ===== Account / login ===== */
+.account-line { margin-top: 0; }
+#guestView .modal-actions { margin-top: 4px; }
+.sync-status { font-size: 0.82rem; color: var(--muted); margin: 0 0 12px; min-height: 1.1em; }
+.sync-status[data-state="synced"] { color: var(--good); }
+.sync-status[data-state="error"] { color: var(--danger); }
+.auth-switch { color: var(--muted); font-size: 0.85rem; text-align: center; margin: 14px 0 0; }
+.linklike {
+  border: none; background: none; padding: 0; cursor: pointer;
+  color: var(--accent); font-family: var(--font); font-size: 0.85rem; font-weight: 600;
+  text-decoration: underline;
+}
+
 /* ===== Desktop layout ===== */
 @media (min-width: 760px) {
   .app { flex-direction: row; }
